@@ -49,17 +49,19 @@
         return;
       }
 
-      output.innerText = "Running Roboflow Workflow API...";
+      output.innerText = "Running Roboflow Workflow via CORS Proxy...";
 
       const reader = new FileReader();
       reader.readAsDataURL(input.files[0]);
       reader.onload = function () {
         const base64Data = reader.result.split(',')[1];
 
-        // Passing api_key via URL parameter bypasses browser CORS preflight blocks
-        const url = `https://serverless.roboflow.com/workflows/${WORKSPACE}/${WORKFLOW_ID}?api_key=${API_KEY}`;
+        // Target URL
+        const targetUrl = `https://serverless.roboflow.com/workflows/${WORKSPACE}/${WORKFLOW_ID}?api_key=${API_KEY}`;
+        // Wrapped with CORS Proxy to bypass browser restrictions
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
-        fetch(url, {
+        fetch(proxyUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
