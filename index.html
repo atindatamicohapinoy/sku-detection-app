@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SKU Detection Demo - ActivAsia</title>
+  <!-- Load Roboflow Web SDK -->
+  <script src="https://cdn.roboflow.com/0.2.26/roboflow.js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; padding: 20px; }
     .container { max-width: 650px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -21,7 +23,7 @@
     
     <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)" />
     <br/>
-    <img id="preview" alt="Preview Image" />
+    <img id="preview" id="uploadedImage" alt="Preview Image" />
     <br/>
     <button onclick="detectSKU()">Detect SKUs</button>
 
@@ -31,8 +33,9 @@
 
   <script>
     const API_KEY = "6BhQ0JKRGhCFfOtFmsUd";
-    const WORKSPACE = "atindata-mico-hapinoy-com";
-    const WORKFLOW_ID = "ai-labeling-vai-labeling-zrrbb-2-rfdetr-seg-small-t1-logic";
+    // Direct Model Deployment ID
+    const MODEL_ID = "ai-labeling-zrrbb-2-rfdetr-seg-small-t1";
+    const VERSION = "1";
 
     function previewImage(event) {
       const img = document.getElementById('preview');
@@ -40,7 +43,7 @@
       img.style.display = 'block';
     }
 
-    function detectSKU() {
+    async function detectSKU() {
       const input = document.getElementById('imageInput');
       const output = document.getElementById('output');
 
@@ -49,46 +52,18 @@
         return;
       }
 
-      output.innerText = "Running Roboflow Workflow via Open CORS Proxy...";
+      output.innerText = "Initializing Roboflow Engine & Running Inference...";
 
-      const reader = new FileReader();
-      reader.readAsDataURL(input.files[0]);
-      reader.onload = function () {
-        const base64Data = reader.result.split(',')[1];
-
-        const targetUrl = `https://serverless.roboflow.com/workflows/${WORKSPACE}/${WORKFLOW_ID}?api_key=${API_KEY}`;
+      try {
+        roboflow.auth({ publishable_key: API_KEY });
+        const model = await roboflow.load({ model: MODEL_ID, version: VERSION });
+        const imgElement = document.getElementById('preview');
         
-        // Free, keyless open CORS proxy (api.allorigins.win)
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-        fetch(proxyUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            inputs: {
-              image: {
-                type: "base64",
-                value: base64Data
-              }
-            }
-          })
-        })
-        .then(async res => {
-          const data = await res.json();
-          if (!res.ok) {
-            throw new Error(JSON.stringify(data, null, 2));
-          }
-          return data;
-        })
-        .then(data => {
-          output.innerText = JSON.stringify(data, null, 2);
-        })
-        .catch(err => {
-          output.innerText = "API Response / Error Details:\n" + err.message;
-        });
-      };
+        const predictions = await model.detect(imgElement);
+        output.innerText = JSON.stringify(predictions, null, 2);
+      } catch (err) {
+        output.innerText = "Error: " + (err.message || err);
+      }
     }
   </script>
 
