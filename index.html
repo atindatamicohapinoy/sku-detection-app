@@ -30,7 +30,6 @@
   </div>
 
   <script>
-    // Configuration translated directly from Roboflow Python snippet
     const API_KEY = "6BhQ0JKRGhCFfOtFmsUd";
     const WORKSPACE = "atindata-mico-hapinoy-com";
     const WORKFLOW_ID = "ai-labeling-vai-labeling-zrrbb-2-rfdetr-seg-small-t1-logic";
@@ -57,12 +56,13 @@
       reader.onload = function () {
         const base64Data = reader.result.split(',')[1];
 
-        // REST API call equivalent to InferenceHTTPClient.run_workflow()
-        fetch(`https://serverless.roboflow.com/workflows/${WORKSPACE}/${WORKFLOW_ID}`, {
+        // Passing api_key via URL parameter bypasses browser CORS preflight blocks
+        const url = `https://serverless.roboflow.com/workflows/${WORKSPACE}/${WORKFLOW_ID}?api_key=${API_KEY}`;
+
+        fetch(url, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "x-api-key": API_KEY // Header-based auth configured in python snippet
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
             inputs: {
