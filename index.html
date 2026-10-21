@@ -49,17 +49,17 @@
         return;
       }
 
-      output.innerText = "Running Roboflow Workflow via CORS Proxy...";
+      output.innerText = "Running Roboflow Workflow via Open CORS Proxy...";
 
       const reader = new FileReader();
       reader.readAsDataURL(input.files[0]);
       reader.onload = function () {
         const base64Data = reader.result.split(',')[1];
 
-        // Target URL
         const targetUrl = `https://serverless.roboflow.com/workflows/${WORKSPACE}/${WORKFLOW_ID}?api_key=${API_KEY}`;
-        // Wrapped with CORS Proxy to bypass browser restrictions
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+        
+        // Free, keyless open CORS proxy (api.allorigins.win)
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
         fetch(proxyUrl, {
           method: "POST",
