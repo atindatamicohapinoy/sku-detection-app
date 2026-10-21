@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SKU Detection Demo - ActivAsia</title>
-  <!-- Official Roboflow Browser Engine -->
-  <script src="https://cdn.roboflow.com/0.2.26/roboflow.js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; padding: 20px; }
     .container { max-width: 650px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -42,7 +40,7 @@
       img.style.display = 'block';
     }
 
-    async function detectSKU() {
+    function detectSKU() {
       const input = document.getElementById('imageInput');
       const output = document.getElementById('output');
 
@@ -51,18 +49,32 @@
         return;
       }
 
-      output.innerText = "Running Model Engine...";
+      output.innerText = "Processing image and fetching detection data...";
 
-      try {
-        roboflow.auth({ publishable_key: API_KEY });
-        const model = await roboflow.load({ model: MODEL_ID, version: VERSION });
-        const imgElement = document.getElementById('preview');
-        
-        const predictions = await model.detect(imgElement);
-        output.innerText = JSON.stringify(predictions, null, 2);
-      } catch (err) {
-        output.innerText = "Error: " + (err.message || err);
-      }
+      const reader = new FileReader();
+      reader.readAsDataURL(input.files[0]);
+      reader.onload = function () {
+        const base64Data = reader.result.split(',')[1];
+
+        // Roboflow Hosted Inference Endpoint for standard model deployments
+        const endpoint = `https://detect.roboflow.com/${MODEL_ID}/${VERSION}?api_key=${API_KEY}&confidence=10`;
+
+        fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: base64Data
+        })
+        .then(async response => {
+          const resData = await response.json();
+          output.innerText = JSON.stringify(resData, null, 2);
+        })
+        .catch(err => {
+          // Properly stringify error object so [object Object] never displays
+          output.innerText = "Error details:\n" + (typeof err === "object" ? JSON.stringify(err, null, 2) : err);
+        });
+      };
     }
   </script>
 
