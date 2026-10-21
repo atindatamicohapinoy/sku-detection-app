@@ -4,14 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SKU Detection Demo - ActivAsia</title>
-  <!-- Official Roboflow JS Library to bypass CORS -->
-  <script src="https://cdn.roboflow.com/0.2.26/roboflow.js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; padding: 20px; }
     .container { max-width: 650px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     input { margin: 15px 0; }
-    button { background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    #output { text-align: left; background: #1e1e1e; color: #00ff66; padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; margin-top: 15px; }
+    button { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    #output { text-align: left; background: #1e1e1e; color: #00ff66; padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; margin-top: 15px; white-space: pre-wrap; }
     img { max-width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
   </style>
 </head>
@@ -42,7 +40,7 @@
       img.style.display = 'block';
     }
 
-    async function detectSKU() {
+    function detectSKU() {
       const input = document.getElementById('imageInput');
       const output = document.getElementById('output');
 
@@ -51,19 +49,30 @@
         return;
       }
 
-      output.innerText = "Loading Roboflow Model & Running Inference...";
+      output.innerText = "Sending image to Roboflow API...";
 
-      try {
-        roboflow.auth({ publishable_key: API_KEY });
-        const model = await roboflow.load({ model: MODEL_ID, version: VERSION });
-        
-        const imgElement = document.getElementById('preview');
-        const predictions = await model.detect(imgElement);
+      const reader = new FileReader();
+      reader.readAsDataURL(input.files[0]);
+      reader.onload = function () {
+        const base64Data = reader.result.split(',')[1];
 
-        output.innerText = JSON.stringify(predictions, null, 2);
-      } catch (error) {
-        output.innerText = "Error: " + error.message;
-      }
+        const url = `https://detect.roboflow.com/${MODEL_ID}/${VERSION}?api_key=${API_KEY}&confidence=10`;
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: base64Data
+        })
+        .then(res => res.json())
+        .then(data => {
+          output.innerText = JSON.stringify(data, null, 2);
+        })
+        .catch(err => {
+          output.innerText = "Fetch Error: " + (err.message || err);
+        });
+      };
     }
   </script>
 
