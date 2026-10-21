@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SKU Detection Demo - ActivAsia</title>
-  <!-- Load Roboflow Web SDK -->
+  <!-- Official Roboflow Browser Engine -->
   <script src="https://cdn.roboflow.com/0.2.26/roboflow.js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; padding: 20px; }
@@ -19,11 +19,11 @@
 
   <div class="container">
     <h2>Retail SKU Detector (POC Demo)</h2>
-    <p>Mag-upload ng larawan ng Knorr products para ma-detect:</p>
+    <p>Mag-upload ng larawan ng shelf products para ma-detect:</p>
     
     <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)" />
     <br/>
-    <img id="preview" id="uploadedImage" alt="Preview Image" />
+    <img id="preview" alt="Preview Image" />
     <br/>
     <button onclick="detectSKU()">Detect SKUs</button>
 
@@ -33,7 +33,6 @@
 
   <script>
     const API_KEY = "6BhQ0JKRGhCFfOtFmsUd";
-    // Direct Model Deployment ID
     const MODEL_ID = "ai-labeling-zrrbb-2-rfdetr-seg-small-t1";
     const VERSION = "1";
 
@@ -52,7 +51,7 @@
         return;
       }
 
-      output.innerText = "Initializing Roboflow Engine & Running Inference...";
+      output.innerText = "Running Model Engine...";
 
       try {
         roboflow.auth({ publishable_key: API_KEY });
