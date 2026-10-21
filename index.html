@@ -30,9 +30,10 @@
   </div>
 
   <script>
+    // Configuration translated directly from Roboflow Python snippet
     const API_KEY = "6BhQ0JKRGhCFfOtFmsUd";
-    const MODEL_ID = "ai-labeling-zrrbb-2-rfdetr-seg-small-t1";
-    const VERSION = "1";
+    const WORKSPACE = "atindata-mico-hapinoy-com";
+    const WORKFLOW_ID = "ai-labeling-vai-labeling-zrrbb-2-rfdetr-seg-small-t1-logic";
 
     function previewImage(event) {
       const img = document.getElementById('preview');
@@ -49,28 +50,41 @@
         return;
       }
 
-      output.innerText = "Sending image to Roboflow API...";
+      output.innerText = "Running Roboflow Workflow API...";
 
       const reader = new FileReader();
       reader.readAsDataURL(input.files[0]);
       reader.onload = function () {
         const base64Data = reader.result.split(',')[1];
 
-        const url = `https://detect.roboflow.com/${MODEL_ID}/${VERSION}?api_key=${API_KEY}&confidence=10`;
-
-        fetch(url, {
+        // REST API call equivalent to InferenceHTTPClient.run_workflow()
+        fetch(`https://serverless.roboflow.com/workflows/${WORKSPACE}/${WORKFLOW_ID}`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/json",
+            "x-api-key": API_KEY // Header-based auth configured in python snippet
           },
-          body: base64Data
+          body: JSON.stringify({
+            inputs: {
+              image: {
+                type: "base64",
+                value: base64Data
+              }
+            }
+          })
         })
-        .then(res => res.json())
+        .then(async res => {
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(JSON.stringify(data, null, 2));
+          }
+          return data;
+        })
         .then(data => {
           output.innerText = JSON.stringify(data, null, 2);
         })
         .catch(err => {
-          output.innerText = "Fetch Error: " + (err.message || err);
+          output.innerText = "API Response / Error Details:\n" + err.message;
         });
       };
     }
